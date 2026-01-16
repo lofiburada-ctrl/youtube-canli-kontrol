@@ -1,39 +1,24 @@
-name: Actionsflow
+name: YouTube Canli Yayin Kontrol
 on:
-  # schedule:
-  #   - cron: "*/15 * * * *"
-  push:
-    branches:
-      - main
-  repository_dispatch:
-  workflow_dispatch:
-    inputs:
-      include:
-        description: "--include: workflow file filter, you can use glob format to filter your workflows, the default value is empty value, means no filter will be using"
-        required: false
-        default: ""
-      force:
-        description: "--force: whether force to run workflow, true or false"
-        required: false
-        default: "false"
-      verbose:
-        description: "--verbose: debug workflow, true or false"
-        required: false
-        default: "false"
+  schedule:
+    - cron: "*/5 * * * *" # Her 5 dakikada bir kontrol eder
+  workflow_dispatch: # Manuel başlatma butonu ekler
+
 jobs:
-  run:
+  check_live:
     runs-on: ubuntu-latest
-    name: Run
-    concurrency: actionsflow
     steps:
-      - uses: actions/checkout@v3
-      - name: Run Actionsflow
-        uses: actionsflow/actionsflow-action@v1.3.0
-        with:
-          args: "build --include ${{ github.event.inputs.include || ''}} -f ${{github.event.inputs.force=='true' && 'true' || 'false'}} --verbose ${{github.event.inputs.verbose=='true' && 'true' || 'false'}}"
-          json-secrets: ${{ toJSON(secrets) }}
-          json-github: ${{ toJSON(github) }}
-      - name: Setup act
-        uses: actionsflow/setup-act-for-actionsflow@v1.2.0
-      - name: Run act
-        run: act --workflows ./dist/workflows --secret-file ./dist/.secrets --eventpath ./dist/event.json --env-file ./dist/.env -P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest
+      - name: YouTube Canlı Yayın Kontrolü
+        run: |
+          # UCXXXXXXXXXXXX kısmına kendi Kanal ID'ni yazmayı unutma!
+          CHANNEL_ID="UCXXXXXXXXXXXX" 
+          RESPONSE=$(curl -s "https://www.youtube.com/channel/$CHANNEL_ID/live")
+          
+          if echo "$RESPONSE" | grep -q '{"text":" canlı"}'; then
+            echo "Yayın aktif! Telegram bildirimi gönderiliyor..."
+            curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage \
+              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -d text="🔴 YAYIN BAŞLADI! Instagram 30K kitlene bu linki gönder: https://www.youtube.com/channel/$CHANNEL_ID/live"
+          else
+            echo "Henüz yayın yok."
+          fi
