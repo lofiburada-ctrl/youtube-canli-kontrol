@@ -10,8 +10,7 @@ jobs:
     steps:
       - name: YouTube Canlı Yayın Kontrolü
         run: |
-          # UCXXXXXXXXXXXX kısmına kendi Kanal ID'ni yazmayı unutma!
-          CHANNEL_ID="UCXXXXXXXXXXXX" 
+          CHANNEL_ID="UC_p0BvLhK0H8WvHjX9T-q9A" 
           RESPONSE=$(curl -s "https://www.youtube.com/channel/$CHANNEL_ID/live")
           
           if echo "$RESPONSE" | grep -q '{"text":" canlı"}'; then
